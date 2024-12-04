@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         SONARQUBE_SCANNER_HOME = tool name: 'SonarQubeScanner'  // Matches the SonarQube scanner tool in Jenkins
-        SONAR_PROJECT_KEY = 'React.js'                         // Unique identifier for your project
+        SONAR_PROJECT_KEY = 'React_Error_Code'                         // Unique identifier for your project
         GITHUB_REPO = 'https://github.com/simonebinezer/React.js'
         SONAR_HOST_URL = 'http://localhost:9000'                // SonarQube server address (change if using SonarCloud or other servers)
         SONAR_TOKEN = credentials('CSAT_Code')                 // Jenkins credentials for the SonarQube token
@@ -14,18 +14,6 @@ pipeline {
             steps {
                 // Checkout the code from GitHub
                 git branch: 'main', url: "${GITHUB_REPO}"
-            }
-        }
-
-        stage('Prepare Local Directory') {
-            steps {
-                script {
-                    echo 'Copying code to local directory...'
-                }
-                bat '''
-                mkdir "C:\\React Code"
-                xcopy /E /I /Y . "C:\\React Code"
-                '''
             }
         }
 
@@ -65,6 +53,19 @@ pipeline {
                             echo "SonarQube Quality Gate passed!"
                         }
                     }
+                }
+            }
+        }
+
+        stage('Prepare Local Directory & Copy Code') {
+            steps {
+                script {
+                    echo 'Copying code to local directory...'
+                    // Copy the code to a local directory only after the quality gate passes
+                    bat '''
+                    mkdir "C:\\React Code"
+                    xcopy /E /I /Y . "C:\\React Code"
+                    '''
                 }
             }
         }
