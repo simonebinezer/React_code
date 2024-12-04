@@ -1,0 +1,54 @@
+import React, { useState, useEffect } from 'react';
+
+// Unused variable to test the "unused variable" issue
+const unusedVariable = "This is not used";
+
+const MyComponent = (props) => {
+  // Missing default prop types
+  const [counter, setCounter] = useState(0);
+
+  // Intentional duplicate code to check for code duplication issues
+  const incrementCounter = () => {
+    setCounter(counter + 1);
+  }
+
+  const incrementAgain = () => {
+    setCounter(counter + 1); // Duplicate code (same as incrementCounter)
+  }
+
+  // Typo in function name (to check for naming convention issues)
+  const decrementCounterr = () => {
+    setCounter(counter - 1);  // Typo in function name (should be decrementCounter)
+  }
+
+  useEffect(() => {
+    console.log("Component mounted");
+    // Unnecessary console log, which should be flagged
+    console.log("Unused log");
+  }, []);
+
+  return (
+    <div>
+      <h1>Counter: {counter}</h1>
+      <button onClick={incrementCounter}>Increment</button>
+      <button onClick={incrementAgain}>Increment Again</button>
+      <button onClick={decrementCounterr}>Decrement</button>
+    </div>
+  );
+}
+
+// PropTypes validation missing for the props
+// Testing missing prop validation to see if SonarQube detects the issue
+MyComponent.defaultProps = {
+  title: "My Default Title",
+};
+
+// Mistake: Invalid JSX syntax in the return
+const App = () => (
+  <div>
+    <MyComponent counter={5} /> {/* Mistake: Missing title prop */}
+    <h1>This should be a self-closing tag but it's not: <br></h1> {/* Incorrect closing tag */}
+  </div>
+)
+
+export default App;
