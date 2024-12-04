@@ -1,0 +1,81 @@
+pipeline {
+    agent any
+
+    environment {
+        SONARQUBE_SCANNER_HOME = tool name: 'SonarQubeScanner'  // Matches the SonarQube scanner tool in Jenkins
+        SONAR_PROJECT_KEY = 'React.js'                         // Unique identifier for your project
+        GITHUB_REPO = 'https://github.com/simonebinezer/React.js'
+        SONAR_HOST_URL = 'http://localhost:9000'                // SonarQube server address (change if using SonarCloud or other servers)
+        SONAR_TOKEN = credentials('CSAT_Code')                 // Jenkins credentials for the SonarQube token
+    }
+
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                // Checkout the code from GitHub
+                git branch: 'main', url: "${GITHUB_REPO}"
+            }
+        }
+
+        stage('Prepare Local Directory') {
+            steps {
+                script {
+                    echo 'Copying code to local directory...'
+                }
+                bat '''
+                mkdir "C:\\React Code"
+                xcopy /E /I /Y . "C:\\React Code"
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                // Install npm dependencies
+                bat 'npm install' // Change to 'sh npm install' if running on Linux/MacOS
+            }
+        }
+
+        stage('Build & SonarQube Analysis') {
+            steps {
+                // Run SonarQube analysis with SonarScanner
+                withSonarQubeEnv('SonarQube') { // 'SonarQube' matches the SonarQube instance name in Jenkins
+                    echo "Starting SonarQube analysis..."
+                    bat """
+                    sonar-scanner -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
+                                  -Dsonar.projectName="React.js" \
+                                  -Dsonar.projectVersion="1.0" \
+                                  -Dsonar.sources=. \
+                                  -Dsonar.host.url="${SONAR_HOST_URL}" \
+                                  -Dsonar.login=${SONAR_TOKEN}
+                    """
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 60, unit: 'MINUTES') {
+                    script {
+                        echo "Checking SonarQube Quality Gate status..."
+                        def qg = waitForQualityGate()  // Wait for the quality gate status
+                        if (qg.status != 'OK') {
+                            error "Pipeline failed due to quality gate failure: ${qg.status}"
+                        } else {
+                            echo "SonarQube Quality Gate passed!"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution completed!'
+        }
+        failure {
+            echo 'Pipeline failed due to quality gate failure or errors in the pipeline.'
+        }
+    }
+}
