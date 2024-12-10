@@ -44,11 +44,12 @@ pipeline {
         stage('Quality Gate') {
     steps {
         script {
-            def qg = waitForQualityGate()
-            echo "Quality Gate status: ${qg.status}"
-            // Temporary bypass
-            if (qg.status != 'OK') {
-                echo "Quality Gate failed, but bypassing for testing."
+            timeout(time: 5, unit: 'MINUTES') {
+                def qg = waitForQualityGate()
+                echo "Quality Gate status: ${qg.status}"
+                if (qg.status != 'OK') {
+                    echo "Quality Gate failed, but bypassing for testing."
+                }
             }
         }
     }
