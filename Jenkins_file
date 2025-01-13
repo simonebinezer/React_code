@@ -5,8 +5,8 @@ pipeline {
         SONARQUBE_SCANNER_HOME = tool name: 'SonarQubeScanner'  // Matches the SonarQube scanner tool in Jenkins
         SONAR_PROJECT_KEY = 'React_Error_Code'                         // Unique identifier for your project
         GITHUB_REPO = 'https://github.com/simonebinezer/React_code.git'
-        SONAR_HOST_URL = 'http://localhost:9000'                // SonarQube server address (change if using SonarCloud or other servers)
-        SONAR_TOKEN = credentials('CSAT_Code')                 // Jenkins credentials for the SonarQube token
+        SONAR_HOST_URL = 'http://54.189.47.219:9000'                // SonarQube server address (change if using SonarCloud or other servers)
+        SONAR_TOKEN = credentials('Sonar_Token')                 // Jenkins credentials for the SonarQube token
     }
 
     stages {
@@ -14,13 +14,6 @@ pipeline {
             steps {
                 // Checkout the code from GitHub
                 git branch: 'main', url: "${GITHUB_REPO}"
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                // Install npm dependencies
-                bat 'npm install' // Change to 'sh npm install' if running on Linux/MacOS
             }
         }
 
