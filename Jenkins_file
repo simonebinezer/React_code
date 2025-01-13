@@ -3,10 +3,10 @@ pipeline {
 
     environment {
         SONARQUBE_SCANNER_HOME = tool name: 'SonarQubeScanner'  // Matches the SonarQube scanner tool in Jenkins
-        SONAR_PROJECT_KEY = 'React_Error_Code'                         // Unique identifier for your project
+        SONAR_PROJECT_KEY = 'React_Error_Code'  // Unique identifier for your project
         GITHUB_REPO = 'https://github.com/simonebinezer/React_code.git'
-        SONAR_HOST_URL = 'http://54.189.47.219:9000'                // SonarQube server address (change if using SonarCloud or other servers)
-        SONAR_TOKEN = credentials('Sonar_Token')                 // Jenkins credentials for the SonarQube token
+        SONAR_HOST_URL = 'http://54.189.47.219:9000'  // SonarQube server address
+        SONAR_TOKEN = credentials('Sonar_Token')  // Jenkins credentials for the SonarQube token
     }
 
     stages {
@@ -17,46 +17,21 @@ pipeline {
             }
         }
 
-        stage('Build & SonarQube Analysis') {
+        stage('Run SonarQube Analysis') {
             steps {
-                // Run SonarQube analysis with SonarScanner
-                withSonarQubeEnv('SonarQube') { // 'SonarQube' matches the SonarQube instance name in Jenkins
-                    echo "Starting SonarQube analysis..."
-                    bat """
-                    sonar-scanner -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
-                                  -Dsonar.projectName="React_Error_Code" \
-                                  -Dsonar.projectVersion="1.0" \
-                                  -Dsonar.sources=. \
-                                  -Dsonar.host.url="${SONAR_HOST_URL}" \
-                                  -Dsonar.login=${SONAR_TOKEN}
-                    """
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-    steps {
-        script {
-            timeout(time: 30, unit: 'MINUTES') {
-                def qg = waitForQualityGate()
-                echo "Quality Gate status: ${qg.status}"
-                if (qg.status != 'OK') {
-                    echo "Quality Gate failed, but bypassing for testing."
-                }
-            }
-        }
-    }
-}
-
-        stage('Prepare Local Directory & Copy Code') {
-            steps {
-                script {
-                    echo 'Copying code to local directory...'
-                    // Copy the code to a local directory only after the quality gate passes
-                    bat '''
-                    mkdir "C:\\React Error Code"
-                    xcopy /E /I /Y . "C:\\React Error Code"
-                    '''
+                timeout(time: 10, unit: 'MINUTES') { // Timeout for SonarQube analysis
+                    withSonarQubeEnv('SonarQube') { // Ensure the environment matches Jenkins' SonarQube server configuration
+                        script {
+                            def scannerHome = tool name: 'SonarQubeScanner' // Ensure tool name matches
+                            sh """
+                                ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONAR_TOKEN} \
+                                -X
+                            """
+                        }
+                    }
                 }
             }
         }
