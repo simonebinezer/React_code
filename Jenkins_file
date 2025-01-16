@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_SCANNER_HOME = tool name: 'SonarQubeScanner'  // Matches the SonarQube scanner tool in Jenkins
+        SONARQUBE_SCANNER_HOME = tool name: 'SonarQube_Scanner'  // Matches the SonarQube scanner tool in Jenkins
         SONAR_PROJECT_KEY = 'React_Error_Code'  // Unique identifier for your project
         GITHUB_REPO = 'https://github.com/simonebinezer/React_code.git'
         SONAR_HOST_URL = 'http://54.189.47.219:9000'  // SonarQube server address
@@ -12,8 +12,8 @@ pipeline {
     stages {
         stage('Checkout SCM') {
             steps {
-                // Checkout the code from GitHub
-                git branch: 'main', url: 'https://github.com/simonebinezer/React_code.git'
+                // Checkout the code from GitHub using credentials
+                git branch: 'main', url: env.GITHUB_REPO, credentialsId: 'Github'
             }
         }
 
@@ -22,7 +22,7 @@ pipeline {
                 timeout(time: 10, unit: 'MINUTES') { // Timeout for SonarQube analysis
                     withSonarQubeEnv('SonarQube') { // Ensure the environment matches Jenkins' SonarQube server configuration
                         script {
-                            def scannerHome = tool name: 'SonarQubeScanner' // Ensure tool name matches
+                            def scannerHome = tool name: 'SonarQube_Scanner' // Ensure tool name matches
                             sh """
                                 ${scannerHome}/bin/sonar-scanner \
                                 -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
